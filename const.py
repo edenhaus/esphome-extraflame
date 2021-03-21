@@ -1,0 +1,5 @@
+CONF_EXTRAFLAME_ID = "extraflame_id"
+CONF_MEMORY = "memory"
+
+MEMORY_RAM = "RAM"
+MEMORY_EEPROM = "EEPROM"
