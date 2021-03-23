@@ -2,6 +2,10 @@
 
 #include "esphome/core/component.h"
 #include "esphome/components/uart/uart.h"
+#include "esphome/core/defines.h"
+#ifdef USE_EXTRAFLAME_DUMP
+#include "esphome/components/api/custom_api_device.h"
+#endif
 
 namespace esphome {
 namespace extraflame {
@@ -11,9 +15,19 @@ struct ExtraflameRequest {
   std::function<void(std::array<uint8_t, 2>)> on_response;
 };
 
-class ExtraflameHub : public Component, public uart::UARTDevice {
+class ExtraflameHub : public Component,
+                      public uart::UARTDevice
+#ifdef USE_EXTRAFLAME_DUMP
+    ,
+                      public api::CustomAPIDevice
+#endif
+{
  public:
   float get_setup_priority() const override { return setup_priority::LATE; }
+
+#ifdef USE_EXTRAFLAME_DUMP
+  void setup() override;
+#endif
 
   // void dump_config() override; todo
 
@@ -23,8 +37,15 @@ class ExtraflameHub : public Component, public uart::UARTDevice {
 
   void reset_input_buffer();
 
+  uint8_t get_memory_hex(std::string memory);
+
  protected:
   void process_request_queue_();
+
+#ifdef USE_EXTRAFLAME_DUMP
+  void on_dump_memory_(std::string memory);
+  void dump_address_(uint8_t memory, uint8_t address);
+#endif
 
   std::vector<ExtraflameRequest> request_queue_;
   ExtraflameRequest request_;
@@ -43,7 +64,6 @@ class ExtraflameComponent : public PollingComponent {
   void update() override;
 
  protected:
-  uint8_t get_memory_hex_();
   virtual void on_read_response(int value) = 0;
 
   ExtraflameHub *hub_;

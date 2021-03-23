@@ -26,6 +26,10 @@ uart:
 extraflame:
 ```
 
+| Name   |   Type    | Default | Description      |
+| ------ | :-------: | ------- | ---------------- |
+| `dump` | `boolean` | false   | See dump section |
+
 ### 2.1. Sensor
 
 With a sensor it is possible to read any value from the RAM or EEPROM. It will be reported as decimal number.
@@ -42,11 +46,11 @@ sensor:
 
 Here is what every options means:
 
-| Name       |     Type     | Default      | Description                 |
-| ---------- | :----------: | ------------ | --------------------------- |
-| `platform` |   `string`   | **Required** | `extraflame`                |
-| `memory`   |   `string`   | **Required** | `RAM` or `EEPROM`           |
-| `address`  | `hex number` | **Required** | The address as a hex number |
+| Name       |      Type       | Default      | Description                 |
+| ---------- | :-------------: | ------------ | --------------------------- |
+| `platform` | `static string` | **Required** | `extraflame`                |
+| `memory`   |    `string`     | **Required** | `RAM` or `EEPROM`           |
+| `address`  |  `hex number`   | **Required** | The address as a hex number |
 
 You can use in addition all [sensor options](https://esphome.io/components/sensor/index.html).
 As for example the temperature must be divided by 2, below an complete example, where I use the built in filters.
@@ -61,11 +65,28 @@ sensor:
       - multiply: 0.5
 ```
 
-## 3. Roadmap
+## 3. Dump
+
+If you enable the `dump` option, a new home assistant is created with give the possibility to dump all values from the two memories.
+The values are logged on level info. Therefore you need be connected to the device to get it.
+The main purpose for this functionality is that different oven store the data on different addresses. It should be only activated for debugging or configuration.
+
+Here an example, how to call the service in home assistant:
+
+```yaml
+service: esphome.esp13_dump_memory
+data:
+  memory: RAM # or EEPROM
+```
+
+The output should be than something similar to:
+![Dump](docs/images/dump.png)
+
+## 4. Roadmap
 
 The next step is to support writes changes to the oven.
 This component is at an early stage so please be aware that there can be bugs...
 
-## 4. Author & License
+## 5. Author & License
 
 Robert Resch, MIT, 2021

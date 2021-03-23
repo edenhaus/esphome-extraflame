@@ -7,6 +7,20 @@ namespace extraflame {
 static const char *TAG = "extraflame.hub";
 static const char *CURRENT_REQUEST = "extraflame.hub.request";
 
+#ifdef USE_EXTRAFLAME_DUMP
+static const char *TAG_DUMP = "extraflame.dump";
+
+void ExtraflameHub::setup() {
+  // Declare a service "dump_memory"
+  //  - Service will be called "esphome.<NODE_NAME>_dump_memory" in Home Assistant.
+  //  - The service has one arguments (type inferred from method definition):
+  //     - memory: string
+  //  - The function start_washer_cycle declared below will attached to the service.
+  register_service(&ExtraflameHub::on_dump_memory_, "dump_memory", {"memory"});
+  ESP_LOGW(TAG, "Setup runned");
+}
+#endif
+
 void ExtraflameHub::loop() {
   while (this->available() >= 2 && this->ongoing_request_) {
     auto resp = *this->read_array<2>();
@@ -62,28 +76,60 @@ void ExtraflameHub::reset_input_buffer() {
   }
 }
 
-ExtraflameComponent::ExtraflameComponent(std::string memory, uint8_t address) {
-  this->memory_ = memory;
-  this->address_ = address;
-}
-
-uint8_t ExtraflameComponent::get_memory_hex_() {
-  if (this->memory_ == "EEPROM") {
+uint8_t ExtraflameHub::get_memory_hex(std::string memory) {
+  if (memory == "EEPROM") {
     return 0x20;
   }
 
   return 0x00;
 }
 
+#ifdef USE_EXTRAFLAME_DUMP
+void ExtraflameHub::on_dump_memory_(std::string memory) {
+  ESP_LOGD(TAG, "Starting to dump all config values of %s", memory.c_str());
+
+  this->dump_address_(this->get_memory_hex(memory), 0x00);
+}
+
+void ExtraflameHub::dump_address_(uint8_t memory, uint8_t address) {
+  auto request = ExtraflameRequest{
+      .command = {memory, address}, .on_response = [this, memory, address](std::array<uint8_t, 2> resp) {
+        uint8_t checksum = resp[0];
+        uint8_t value = resp[1];
+
+        // checksum is calculated by (memory + address + value) & 0xFF
+        uint8_t checksum_calc = (memory + address + value) & 0xFF;
+        if (checksum_calc != checksum) {
+          ESP_LOGW(TAG_DUMP, "Request: 0x%02X 0x%02X Response: 0x%02X (0x%02X) !!!CRC invalid!!!", memory, address,
+                   value, checksum);
+        } else {
+          ESP_LOGI(TAG_DUMP, "Request: 0x%02X 0x%02X Response: 0x%02X (0x%02X) -> %d", memory, address, value, checksum,
+                   int(value));
+        }
+
+        if (address != 0xFF) {
+          this->dump_address_(memory, address + 1);
+        }
+      }};
+  this->add_request(request);
+}
+#endif
+
+ExtraflameComponent::ExtraflameComponent(std::string memory, uint8_t address) {
+  this->memory_ = memory;
+  this->address_ = address;
+}
+
 void ExtraflameComponent::update() {
-  auto request = ExtraflameRequest{.command = {this->get_memory_hex_(), this->address_},
+  auto request = ExtraflameRequest{.command = {this->hub_->get_memory_hex(this->memory_), this->address_},
                                    .on_response = [this](std::array<uint8_t, 2> resp) {
                                      uint8_t checksum = resp[0];
                                      uint8_t value = resp[1];
 
                                      // checksum is calculated by (memory + address + value) & 0xFF
 
-                                     uint8_t checksum_calc = (this->get_memory_hex_() + this->address_ + value) & 0xFF;
+                                     uint8_t checksum_calc =
+                                         (this->hub_->get_memory_hex(this->memory_) + this->address_ + value) & 0xFF;
                                      if (checksum_calc != checksum) {
                                        ESP_LOGW(TAG, "CRC invalid. Skipping update");
                                        this->hub_->reset_input_buffer();
