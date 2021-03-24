@@ -63,9 +63,33 @@ void ExtraflameHub::process_request_queue_() {
 }
 
 void ExtraflameHub::add_request(ExtraflameRequest request) {
-  ESP_LOGD(TAG, "Adding request");
+  ESP_LOGV(TAG, "Adding request");
   this->request_queue_.push_back(request);
   this->process_request_queue_();
+}
+
+void ExtraflameHub::add_read_request(std::vector<uint8_t> command, std::function<void(uint8_t)> on_success,
+                                     std::function<void()> on_error) {
+  if (command.size() == 2) {
+    auto request =
+        ExtraflameRequest{.command = command, .on_response = [this, command, on_response](std::array<uint8_t, 2> resp) {
+                            uint8_t checksum = resp[0];
+                            uint8_t value = resp[1];
+
+                            // checksum is calculated by (memory + address + value) & 0xFF
+                            uint8_t checksum_calc = (command[0] + command[1] + value) & 0xFF;
+                            if (checksum_calc != checksum) {
+                              ESP_LOGW(TAG, "CRC invalid. Skipping update");
+                              this->reset_input_buffer();
+                              on_error();
+                            } else {
+                              on_response(value);
+                            }
+                          }};
+    this->add_request(request);
+  } else {
+    ESP_LOGW(TAG, "Read request must have the size of 2, but was %d", command.size());
+  }
 }
 
 void ExtraflameHub::reset_input_buffer() {
@@ -121,23 +145,9 @@ ExtraflameComponent::ExtraflameComponent(std::string memory, uint8_t address) {
 }
 
 void ExtraflameComponent::update() {
-  auto request = ExtraflameRequest{.command = {this->hub_->get_memory_hex(this->memory_), this->address_},
-                                   .on_response = [this](std::array<uint8_t, 2> resp) {
-                                     uint8_t checksum = resp[0];
-                                     uint8_t value = resp[1];
-
-                                     // checksum is calculated by (memory + address + value) & 0xFF
-
-                                     uint8_t checksum_calc =
-                                         (this->hub_->get_memory_hex(this->memory_) + this->address_ + value) & 0xFF;
-                                     if (checksum_calc != checksum) {
-                                       ESP_LOGW(TAG, "CRC invalid. Skipping update");
-                                       this->hub_->reset_input_buffer();
-                                     } else {
-                                       this->on_read_response(int(value));
-                                     }
-                                   }};
-  this->hub_->add_request(request);
+  this->hub_->add_read_request(
+      {this->hub_->get_memory_hex(this->memory_), this->address_},
+      [this](std::array<uint8_t> resp) { this->on_read_response(int(value)); }, []() {});
 }
 
 }  // namespace extraflame

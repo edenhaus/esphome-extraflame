@@ -35,6 +35,9 @@ class ExtraflameHub : public Component,
 
   void add_request(ExtraflameRequest request);
 
+  void add_read_request(std::vector<uint8_t> command, std::function<void(uint8_t)> on_response,
+                        std::function<void()> on_error);
+
   void reset_input_buffer();
 
   uint8_t get_memory_hex(std::string memory);

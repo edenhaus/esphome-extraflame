@@ -14,7 +14,7 @@ CONFIG_SCHEMA = EXTRAFLAME_COMPONENT_SCHEMA.extend(sensor.SENSOR_SCHEMA.extend({
     cv.GenerateID(): cv.declare_id(ExtraflameSensor),
     cv.GenerateID(CONF_EXTRAFLAME_ID): cv.use_id(ExtraflameHub),
 
-    cv.Required(CONF_ADDRESS): cv.hex_int,
+    cv.Required(CONF_ADDRESS): cv.hex_uint8_t,
     cv.Required(CONF_MEMORY): cv.one_of(MEMORY_RAM, MEMORY_EEPROM, upper=True)
 }))
 
