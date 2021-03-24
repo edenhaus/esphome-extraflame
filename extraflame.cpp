@@ -52,7 +52,7 @@ void ExtraflameHub::loop() {
 
     if ((this->status_ == REQUEST_SEND && this->is_request_echo_(response, 0)) ||
         (this->status_ == REQUEST_ECHO && this->request_.command.size() == 4 && this->is_request_echo_(response, 2))) {
-      ESP_LOGD(TAG, "Response was request echo");
+      ESP_LOGV(TAG, "Response was request echo");
       this->status_ = REQUEST_ECHO;
       continue;
     }
@@ -60,26 +60,14 @@ void ExtraflameHub::loop() {
     this->cancel_timeout(CURRENT_REQUEST);
     int value = response[1];
     bool success = true;
-    if (this->request_.command.size() == 4) {
-      // handle write request
-      if (this->request_.command[1] != response[0] || this->request_.command[2] != response[1]) {
-        ESP_LOGW(TAG, "Invalid write request. Probably you are not allowed to change the value");
-        this->reset_input_buffer();
-        success = false;
-      }
+
+    // checksum is calculated by (memory + address + value) & 0xFF
+    uint8_t checksum_calc = (this->request_.command[0] + this->request_.command[1] + response[1]) & 0xFF;
+    if (checksum_calc != response[0]) {
+      ESP_LOGW(TAG, "Checksum invalid. Skipping update");
+      this->reset_input_buffer();
+      success = false;
     } else {
-      // handle read request
-
-      // checksum is calculated by (memory + address + value) & 0xFF
-      uint8_t checksum_calc = (this->request_.command[0] + this->request_.command[1] + response[1]) & 0xFF;
-      if (checksum_calc != response[0]) {
-        ESP_LOGW(TAG, "Checksum invalid. Skipping update");
-        this->reset_input_buffer();
-        success = false;
-      }
-    }
-
-    if (success) {
       this->notify_components_(get_memory_from_command(this->request_.command[0]), this->request_.command[1],
                                int(value));
     }
@@ -114,10 +102,9 @@ void ExtraflameHub::process_request_queue_() {
     if (this->request_.command.size() == 2) {
       ESP_LOGV(TAG, "Sending request: 0x%02X 0x%02X", this->request_.command[0], this->request_.command[1]);
     } else {
-      ESP_LOGW(TAG, "Sending request: 0x%02X 0x%02X  0x%02X  0x%02X", this->request_.command[0],
+      ESP_LOGV(TAG, "Sending request: 0x%02X 0x%02X  0x%02X  0x%02X", this->request_.command[0],
                this->request_.command[1], this->request_.command[2], this->request_.command[3]);
     }
-    ESP_LOGV(TAG, "Sending request: 0x%02X 0x%02X", this->request_.command[0], this->request_.command[1]);
     this->write_array(this->request_.command);
   }
 }
@@ -176,7 +163,7 @@ void ExtraflameHub::dump_address_(uint8_t memory, uint8_t address) {
           this->dump_address_(memory, address + 1);
         }
       }};
-  this->add_request(request);
+  this->add_request(request, false);
 }
 #endif
 
