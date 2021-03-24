@@ -11,10 +11,7 @@ void ExtraflameSensor::on_read_response(int value) {
   this->publish_state(value);
 }
 
-/*void ExtraflameSensor::dump_config() {
-  LOG_SENSOR("", "Extraflame Sensor", this);
-  ESP_LOGCONFIG(TAG, "  Sensor has datapoint ID %u", this->sensor_id_);
-}*/
+void ExtraflameSensor::dump_config_internal_() { LOG_SENSOR("  ", "Sensor", this); }
 
 }  // namespace extraflame
 }  // namespace esphome

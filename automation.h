@@ -8,41 +8,48 @@ namespace extraflame {
 
 template<typename... Ts> class ExtraflameWriteAction : public Action<Ts...>, public Parented<ExtraflameHub> {
  public:
-  TEMPLATABLE_VALUE(uint16_t, address)
-  TEMPLATABLE_VALUE(uint16_t, value)
+  TEMPLATABLE_VALUE(uint8_t, address)
+  TEMPLATABLE_VALUE(uint8_t, value)
 
-  void set_memory(const std::string memory) { this->memory_ = memory; }
+  void set_memory(const std::string memory) { this->memory_ = memory2hex(memory); }
 
   void play_complex(Ts... x) override {
     this->num_running_++;
 
-    auto memory_hex = this->parent_->get_memory_hex(this->memory_);
-    this->parent_->add_read_request(
-        {memory_hex, this->address_},
-        [this](std::array<uint8_t> resp) {
-          if (this->value_ == resp) {
-            // values are the same, we don't need an update
-            this->play_next_(x...);
-          } else {
-            // todo
-          }
-        },
-        [this]() { this->stop_complex(); });
+    auto address = this->address_.value(x...);
+    auto value_write = this->value_.value(x...);
+
+    auto request = ExtraflameRequest{.command = {this->memory_, address},
+                                     .on_response = [this, address, value_write, x...](uint8_t value, bool success) {
+                                       if (success) {
+                                         if (value_write == value) {
+                                           // values are the same, we don't need an update
+                                           this->play_next_(x...);
+                                         } else {
+                                           uint8_t write_memory = 0x80 + this->memory_;
+                                           uint8_t checksum = (write_memory + address + value_write) & 0xFF;
+                                           auto write_request = ExtraflameRequest{
+                                               .command = {write_memory, address, value_write, checksum},
+                                               .on_response = [this, x...](uint8_t value, bool success) {
+                                                 if (success) {
+                                                   this->play_next_(x...);
+                                                 } else {
+                                                   this->stop_complex();
+                                                 }
+                                               }};
+                                           this->parent_->add_request(write_request, true);
+                                         }
+                                       } else {
+                                         this->stop_complex();
+                                       }
+                                     }};
+    this->parent_->add_request(request, true);
   }
 
-  void play(Ts... x) override {
-    auto memory_hex = this->parent_->get_memory_hex(this->memory_);
-
-    if (this->static_) {
-      this->parent_->write_array(this->data_static_);
-    } else {
-      auto val = this->data_func_(x...);
-      this->parent_->write_array(val);
-    }
-  }
+  void play(Ts... x) override { this->play_complex(x...); }
 
  protected:
-  std::string memory_{};
+  uint8_t memory_{};
 };
 
 }  // namespace extraflame

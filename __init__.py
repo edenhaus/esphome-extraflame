@@ -4,7 +4,7 @@ import esphome.core as core
 import esphome.config_validation as cv
 from esphome.components import uart
 from esphome.const import CONF_ID, CONF_DUMP, CONF_ADDRESS, CONF_VALUE
-from .const import CONF_MEMORY, MEMORY_RAM, MEMORY_EEPROM
+from .const import CONF_MEMORY, MEMORY_RAM, MEMORY_EEPROM, CONF_EXTRAFLAME_ID
 
 DEPENDENCIES = ["uart"]
 CODEOWNERS = ["@edenhaus"]
@@ -14,7 +14,17 @@ ExtraflameHub = extraflame_ns.class_("ExtraflameHub", cg.Component, uart.UARTDev
 ExtraflameComponent = extraflame_ns.class_("ExtraflameComponent", cg.PollingComponent)
 ExtraflameWriteAction = extraflame_ns.class_("ExtraflameWriteAction", automation.Action)
 
-EXTRAFLAME_COMPONENT_SCHEMA = cv.polling_component_schema("60s")
+EXTRAFLAME_COMPONENT_SCHEMA = (
+    cv.Schema(
+        {
+            cv.GenerateID(CONF_EXTRAFLAME_ID): cv.use_id(ExtraflameHub),
+
+            cv.Required(CONF_ADDRESS): cv.hex_uint8_t,
+            cv.Required(CONF_MEMORY): cv.one_of(MEMORY_RAM, MEMORY_EEPROM, upper=True),
+        }
+    )
+    .extend(cv.polling_component_schema("60s"))
+)
 
 
 CONFIG_SCHEMA = (

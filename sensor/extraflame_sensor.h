@@ -12,9 +12,10 @@ class ExtraflameSensor : public ExtraflameComponent, public sensor::Sensor {
 
   float get_setup_priority() const override { return setup_priority::LATE; }
 
-  //  void dump_config() override; todo
- protected:
   void on_read_response(int value) override;
+
+ protected:
+  void dump_config_internal_() override;
 };
 
 }  // namespace extraflame
