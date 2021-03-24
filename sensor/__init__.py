@@ -11,9 +11,10 @@ CODEOWNERS = ["@edenhaus"]
 ExtraflameSensor = extraflame_ns.class_("ExtraflameSensor", ExtraflameComponent, sensor.Sensor)
 
 CONFIG_SCHEMA = EXTRAFLAME_COMPONENT_SCHEMA.extend(
-    {
+    sensor.SENSOR_SCHEMA.extend({
         cv.GenerateID(): cv.declare_id(ExtraflameSensor),
-    }).extend(sensor.SENSOR_SCHEMA)
+    })
+)
 
 
 def to_code(config):
@@ -21,4 +22,3 @@ def to_code(config):
     yield cg.register_component(var, config)
     yield sensor.register_sensor(var, config)
     yield cg.register_parented(var, config[CONF_EXTRAFLAME_ID])
-
