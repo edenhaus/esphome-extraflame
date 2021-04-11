@@ -29,8 +29,6 @@ At the end you should have a folder structure like:
 │       ├── extraflame.h
 │       └── sensor
 │           ├── __init__.py
-│           ├── __pycache__
-│           │   └── __init__.cpython-36.pyc
 │           ├── extraflame_sensor.cpp
 │           └── extraflame_sensor.h
 ...
