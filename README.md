@@ -4,11 +4,39 @@ Custom component for EspHome to control your extraflame oven
 
 ## 1. Installation
 
-Create the folder `custom_components` (where the `config.yaml` is stored) if it is missing.
+Create the folder `custom_components` (where the config files are stored) if it is missing.
 Clone this repository with the comment below:
 
 ```bash
 git clone https://github.com/edenhaus/esphome-extraflame.git extraflame
+```
+
+At the end you should have a folder structure like:
+
+```
+.
+├── custom_components
+│   └── extraflame
+│       ├── LICENSE
+│       ├── README.md
+│       ├── __init__.py
+│       ├── automation.h
+│       ├── const.py
+│       ├── docs
+│       │   └── images
+│       │       └── dump.png
+│       ├── extraflame.cpp
+│       ├── extraflame.h
+│       └── sensor
+│           ├── __init__.py
+│           ├── __pycache__
+│           │   └── __init__.cpython-36.pyc
+│           ├── extraflame_sensor.cpp
+│           └── extraflame_sensor.h
+...
+(Your config yaml files of your esp devices.)
+...
+└── secrets.yaml
 ```
 
 ## 2. Base Configuration
@@ -65,7 +93,29 @@ sensor:
       - multiply: 0.5
 ```
 
-## 3. Dump
+## 3. Write a value
+
+Writing a value can be done with the following action:
+
+```yaml
+extraflame.write:
+  memory: RAM
+  address: 0x21
+  value: 0x01
+```
+
+Here is what every options means:
+
+| Name      |     Type     | Default      | Description                               |
+| --------- | :----------: | ------------ | ----------------------------------------- |
+| `memory`  |   `string`   | **Required** | `RAM` or `EEPROM`                         |
+| `address` | `hex number` | **Required** | The address as a hex number               |
+| `value`   | `hex number` | **Required** | The actual value, which you want to write |
+
+All fields can be used with template and lambdas. More information about action can be found in the official [documentation](https://esphome.io/guides/automations.html).
+Before writing the value to the memory, a read request is send to verify if a write command is necessary. This should reduce unnecessary write as the EEPROM can has only a certain number of writes.
+
+## 4. Dump
 
 If you enable the `dump` option, a new home assistant is created with give the possibility to dump all values from the two memories.
 The values are logged on level info. Therefore you need be connected to the device to get it.
@@ -76,17 +126,26 @@ Here an example, how to call the service in home assistant:
 ```yaml
 service: esphome.esp13_dump_memory
 data:
-  memory: RAM # or EEPROM
+  memory: RAM
+  start: 0x00
+  end: 0xFF
 ```
+
+Here is what every options means:
+
+| Name     |      Type      | Default      | Description                                                                        |
+| -------- | :------------: | ------------ | ---------------------------------------------------------------------------------- |
+| `memory` |    `string`    | **Required** | `RAM` or `EEPROM`                                                                  |
+| `start`  | `(hex) number` | **Required** | From which address the values are dumped. Values must be between 0x0 - 0xFF (255)  |
+| `end`    | `(hex) number` | **Required** | Until which address the values are dumped. Values must be between 0x0 - 0xFF (255) |
 
 The output should be than something similar to:
 ![Dump](docs/images/dump.png)
 
-## 4. Roadmap
+## 5. Roadmap
 
-The next step is to support writes changes to the oven.
 This component is at an early stage so please be aware that there can be bugs...
 
-## 5. Author & License
+## 6. Author & License
 
 Robert Resch, MIT, 2021
