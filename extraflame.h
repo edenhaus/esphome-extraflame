@@ -60,8 +60,8 @@ class ExtraflameHub : public Component,
   bool is_request_echo_(std::array<uint8_t, 2> response, int request_part_num);
 
 #ifdef USE_EXTRAFLAME_DUMP
-  void on_dump_memory_(std::string memory);
-  void dump_address_(uint8_t memory, uint8_t address);
+  void on_dump_memory_(std::string memory, int start, int end);
+  void dump_address_(uint8_t memory, uint8_t address, uint8_t address_max);
 #endif
 
   std::vector<ExtraflameRequest> request_queue_;
