@@ -4,37 +4,13 @@ Custom component for EspHome to control your extraflame oven
 
 ## 1. Installation
 
-Create the folder `custom_components` (where the config files are stored) if it is missing.
-Clone this repository with the comment below:
+Please add the following snippet into your configuration file.
+More information about `external_components` can be found in the official [docs](https://esphome.io/components/external_components.html)
 
-```bash
-git clone https://github.com/edenhaus/esphome-extraflame.git extraflame
-```
-
-At the end you should have a folder structure like:
-
-```
-.
-├── custom_components
-│   └── extraflame
-│       ├── LICENSE
-│       ├── README.md
-│       ├── __init__.py
-│       ├── automation.h
-│       ├── const.py
-│       ├── docs
-│       │   └── images
-│       │       └── dump.png
-│       ├── extraflame.cpp
-│       ├── extraflame.h
-│       └── sensor
-│           ├── __init__.py
-│           ├── extraflame_sensor.cpp
-│           └── extraflame_sensor.h
-...
-(Your config yaml files of your esp devices.)
-...
-└── secrets.yaml
+```yaml
+external_components:
+  - source: github://edenhaus/esphome-extraflame
+    components: [extraflame]
 ```
 
 ## 2. Base Configuration
