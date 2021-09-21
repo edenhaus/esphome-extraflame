@@ -1,0 +1,133 @@
+---
+packages:
+  # Order matters!!! First has more priority then later ones
+  # highest priority (after config in this file)
+  # ....
+  # lowest priority (should be device base)
+  base: !include devices/base.yaml # in this file the esphome, api, wifi config is
+
+
+external_components:
+  - source: github://edenhaus/esphome-extraflame
+    components: [ extraflame ]
+
+uart:
+  tx_pin: GPIO25
+  rx_pin: GPIO26
+  baud_rate: 1200
+  # data_bits: 8
+  # parity: NONE
+  stop_bits: 2
+
+extraflame:
+  dump: false
+
+text_sensor:
+  - platform: template
+    name: Status
+    id: oven_status
+
+sensor:
+  - platform: extraflame
+    memory: RAM
+    address: 0x01
+    id: oven_temp
+    name: Temperature
+    filters:
+      - multiply: 0.5
+
+  - platform: extraflame
+    memory: RAM
+    address: 0x21
+    id: oven_status_raw
+    name: ${name} Status Raw
+    internal: true
+    update_interval: 15s
+    # Values
+    # 0 = Off
+    # 1= Start
+    # 2 = Pellet loading
+    # 3 = Ignition
+    # 4 = Work
+    # 5 = Brazier cleaning
+    # 6 = Final cleaning
+    # 7= Standby
+    # 8= Pellet missing alarm
+    # 9= Ignition failure alarm
+    # 10=Undefined alarms (to be investigated)
+    on_value:
+      - text_sensor.template.publish:
+          id: oven_status
+          state: !lambda |-
+            if (x == 0) {
+              return "Aus";
+            } else if (x >= 1 && x <= 3) {
+              return "Anzünden";
+            } else if (x == 4) {
+              return "Läuft";
+            } else if (x == 5) {
+              return "Automatische Reinigung";
+            } else if (x == 6) {
+              return "Ausschalten";
+            } else if (x == 7) {
+              return "Standby";
+            } else if (x == 8) {
+              return "Keine Pellets";
+            } else if (x == 9) {
+              return "Anzünden fehlgeschlagen";
+            }
+            return "Unbekannter Fehler";
+
+  - platform: extraflame
+    memory: RAM
+    address: 0x37
+    name: ${name} Stufe
+    filters:
+      # See docs
+      - lambda: |-
+          auto level = x - 200;
+          if (level > 5) {
+            level = level - 16;
+          }
+          return level;
+
+climate:
+  - platform: bang_bang
+    name: Oven
+    sensor: oven_temp
+    default_target_temperature_low: 17 °C
+    default_target_temperature_high: 20 °C
+    heat_action:
+      if:
+        condition:
+          sensor.in_range:
+            id: oven_status_raw
+            below: 0
+        then:
+          extraflame.write:
+            memory: RAM
+            address: 0x21
+            value: 0x01
+    idle_action:
+      if:
+        condition:
+          lambda: |-
+            auto state = id(oven_status_raw).state;
+            return state > 0 && state < 6;
+        then:
+          extraflame.write:
+            memory: RAM
+            address: 0x21
+            value: 0x06
+
+api:
+  services:
+    - service: write_value_ram
+      variables:
+        address: int
+        value: int
+      then:
+        extraflame.write:
+            memory: RAM
+            address: !lambda return address;
+            value: !lambda return value;
