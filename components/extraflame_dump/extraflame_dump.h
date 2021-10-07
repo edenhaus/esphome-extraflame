@@ -4,13 +4,14 @@
 #include "esphome/core/defines.h"
 #include "esphome/core/helpers.h"
 #include "esphome/components/api/custom_api_device.h"
-#include "extraflame.h"
+#include "../extraflame/extraflame.h"
 
 namespace esphome {
 namespace extraflame {
 
 
 class ExtraflameDump :
+                      public Component,
                       public api::CustomAPIDevice,
                       public Parented<ExtraflameHub>
 {
