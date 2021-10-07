@@ -29,7 +29,7 @@ CONFIG_SCHEMA = (
 )
 
 
-def to_code(config):
+async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
     await uart.register_uart_device(var, config)
@@ -47,7 +47,7 @@ def to_code(config):
         }
     ),
 )
-def extraflame_write_to_code(config, action_id, template_arg, args):
+async def extraflame_write_to_code(config, action_id, template_arg, args):
     var = cg.new_Pvariable(action_id, template_arg)
     await cg.register_parented(var, config[CONF_ID])
 
