@@ -19,6 +19,6 @@ CONFIG_SCHEMA = EXTRAFLAME_COMPONENT_SCHEMA.extend(
 
 def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID], config[CONF_MEMORY], config[CONF_ADDRESS])
-    yield cg.register_component(var, config)
-    yield sensor.register_sensor(var, config)
-    yield cg.register_parented(var, config[CONF_EXTRAFLAME_ID])
+    await cg.register_component(var, config)
+    await sensor.register_sensor(var, config)
+    await cg.register_parented(var, config[CONF_EXTRAFLAME_ID])

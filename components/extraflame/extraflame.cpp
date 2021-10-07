@@ -16,28 +16,8 @@ static uint8_t get_memory_from_command(uint8_t command) {
   return command;
 }
 
-#ifdef USE_EXTRAFLAME_DUMP
-static const char *TAG_DUMP = "extraflame.dump";
-
-void ExtraflameHub::setup() {
-  // Declare a service "dump_memory"
-  //  - Service will be called "esphome.<NODE_NAME>_dump_memory" in Home Assistant.
-  //  - The service has one arguments (type inferred from method definition):
-  //     - memory: string
-  //     - start: int (0-255) start<=end
-  //     - end: int (0-255)
-  //  - The function start_washer_cycle declared below will attached to the service.
-  register_service(&ExtraflameHub::on_dump_memory_, "dump_memory", {"memory", "start", "end"});
-}
-#endif
-
 void ExtraflameHub::dump_config() {
   ESP_LOGCONFIG(TAG, "ExtraflameHub:");
-#ifdef USE_EXTRAFLAME_DUMP
-  ESP_LOGCONFIG(TAG, "  Dump: true");
-#else
-  ESP_LOGCONFIG(TAG, "  Dump: false");
-#endif
 
   for (auto *component : this->components_) {
     component->dump_config_internal();
@@ -148,34 +128,6 @@ bool ExtraflameHub::is_request_echo_(std::array<uint8_t, 2> response, int reques
   return this->request_.command[request_part_num] == response[0] &&
          this->request_.command[request_part_num + 1] == response[1];
 }
-
-#ifdef USE_EXTRAFLAME_DUMP
-void ExtraflameHub::on_dump_memory_(std::string memory, int start, int end) {
-  ESP_LOGD(TAG, "Starting to dump all config values of %s", memory.c_str());
-
-  if (start < 0 || start > 255){
-    ESP_LOGE(TAG, "'start' value is invalid!! Must be between 0 - 255 but was %d", start);
-  } else if (end < 0 || end > 255){
-    ESP_LOGE(TAG, "'end' value is invalid!! Must be between 0 - 255 but was %d", end);
-  } else if (start > end){
-    ESP_LOGE(TAG, "'start' must be lower or equal to 'end'");
-  } else {
-    this->dump_address_(memory2hex(memory), (uint8_t) start, (uint8_t) end);
-  }
-}
-
-void ExtraflameHub::dump_address_(uint8_t memory, uint8_t address, uint8_t address_max) {
-  auto request = ExtraflameRequest{
-      .command = {memory, address}, .on_response = [this, memory, address, address_max](int value, bool success) {
-        ESP_LOGI(TAG_DUMP, "0x%02X; 0x%02X; 0x%02X; %d", memory, address, (uint8_t) value, value);
-
-        if (address != address_max) {
-          this->dump_address_(memory, address + 1, address_max);
-        }
-      }};
-  this->add_request(request, false);
-}
-#endif
 
 ExtraflameComponent::ExtraflameComponent(std::string memory, uint8_t address) {
   this->memory_ = memory;

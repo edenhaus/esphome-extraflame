@@ -4,9 +4,6 @@
 #include "esphome/components/uart/uart.h"
 #include "esphome/core/defines.h"
 #include "esphome/core/helpers.h"
-#ifdef USE_EXTRAFLAME_DUMP
-#include "esphome/components/api/custom_api_device.h"
-#endif
 
 namespace esphome {
 namespace extraflame {
@@ -28,17 +25,9 @@ class ExtraflameComponent;
 
 class ExtraflameHub : public Component,
                       public uart::UARTDevice
-#ifdef USE_EXTRAFLAME_DUMP
-    ,
-                      public api::CustomAPIDevice
-#endif
 {
  public:
   float get_setup_priority() const override { return setup_priority::LATE; }
-
-#ifdef USE_EXTRAFLAME_DUMP
-  void setup() override;
-#endif
 
   void dump_config() override;
 
@@ -58,11 +47,6 @@ class ExtraflameHub : public Component,
   void process_request_queue_();
   void notify_components_(uint8_t memory_hex, uint8_t address, int value);
   bool is_request_echo_(std::array<uint8_t, 2> response, int request_part_num);
-
-#ifdef USE_EXTRAFLAME_DUMP
-  void on_dump_memory_(std::string memory, int start, int end);
-  void dump_address_(uint8_t memory, uint8_t address, uint8_t address_max);
-#endif
 
   std::vector<ExtraflameRequest> request_queue_;
   ExtraflameRequest request_;
