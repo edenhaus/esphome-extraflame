@@ -4,6 +4,7 @@
 #include "esphome/core/defines.h"
 #include "esphome/core/helpers.h"
 #include "esphome/components/api/custom_api_device.h"
+#include "extraflame.h"
 
 namespace esphome {
 namespace extraflame {

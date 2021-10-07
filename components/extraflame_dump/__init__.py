@@ -12,10 +12,10 @@ extraflame_ns = cg.esphome_ns.namespace("extraflame")
 ExtraflameDump = extraflame_ns.class_("ExtraflameDump", cg.Component)
 
 
-CONFIG_SCHEMA = {
+CONFIG_SCHEMA = cv.Schema({
         cv.GenerateID(): cv.declare_id(ExtraflameDump),
         cv.GenerateID(CONF_EXTRAFLAME_ID): cv.use_id(ExtraflameHub),
-   }
+   })
 
 
 async def to_code(config):
