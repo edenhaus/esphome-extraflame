@@ -1,11 +1,11 @@
 #include "extraflame_dump.h"
 #include "esphome/core/log.h"
 
+
 namespace esphome {
 namespace extraflame {
 
 static const char *TAG = "extraflame.dump";
-
 
 void ExtraflameDump::setup() {
   // Declare a service "dump_memory"
@@ -24,7 +24,7 @@ void ExtraflameDump::dump_config() {
 
 
 void ExtraflameDump::on_dump_memory_(std::string memory, int start, int end) {
-  ESP_LOGD(TAG, "Starting to dump all config values of %s", memory.c_str());
+  ESP_LOGD(TAG, "Starting to dump config values of %s (%d - %d)", memory.c_str(), start, end);
 
   if (start < 0 || start > 255){
     ESP_LOGE(TAG, "'start' value is invalid!! Must be between 0 - 255 but was %d", start);
@@ -33,17 +33,31 @@ void ExtraflameDump::on_dump_memory_(std::string memory, int start, int end) {
   } else if (start > end){
     ESP_LOGE(TAG, "'start' must be lower or equal to 'end'");
   } else {
+    this->dump_.clear();
+    this->dump_ << "{";
+
+    ESP_LOGI(TAG, "Test on_dump_memory_");
+
     this->dump_address_(memory2hex(memory), (uint8_t) start, (uint8_t) end);
   }
 }
 
 void ExtraflameDump::dump_address_(uint8_t memory, uint8_t address, uint8_t address_max) {
-  auto request = ExtraflameRequest{
-      .command = {memory, address}, .on_response = [this, memory, address, address_max](int value, bool success) {
-        ESP_LOGI(TAG, "0x%02X; 0x%02X; 0x%02X; %d", memory, address, (uint8_t) value, value);
+    ESP_LOGI(TAG, "Test dump_address_");
 
-        if (address != address_max) {
+  auto request = ExtraflameRequest{
+      .command = {memory, address}, .on_response = [this, memory, address, address_max](int value, bool success) mutable {
+        ESP_LOGI(TAG, "0x%02X; 0x%02X; 0x%02X; %d", memory, address, (uint8_t) value, value);
+        this->dump_ << "\"" << address << "\":";
+
+        if (address <= address_max) {
+          this->dump_ << ",";
           this->dump_address_(memory, address + 1, address_max);
+        }
+        else{
+          this->dump_ << "}";
+          ESP_LOGI(TAG, "Writing json output and posting it");
+          ESP_LOGI(TAG, "Juhu 2 %s", this->dump_.str().c_str());
         }
       }};
   this->parent_->add_request(request, false);
