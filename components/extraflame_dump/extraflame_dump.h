@@ -6,18 +6,17 @@
 #include "esphome/components/api/custom_api_device.h"
 //#include "esphome/components/http_request/http_request.h"
 #include "../extraflame/extraflame.h"
-#include <sstream>
 
 namespace esphome {
 namespace extraflame {
 
 
-class ExtraflameDump :
-                      public Component,
-                      public api::CustomAPIDevice,
-                      public Parented<ExtraflameHub>
+class ExtraflameDump : public ExtraflameComponent,
+                       public api::CustomAPIDevice
 {
  public:
+  // initialize with dummy values
+  explicit ExtraflameDump() : ExtraflameComponent(0xFF, 0xFF) {}
   /*ExtraflameDump(http_request::HttpRequestComponent *http_request) {
     this->http_request_ = http_request;
   }*/
@@ -26,13 +25,19 @@ class ExtraflameDump :
 
   void dump_config() override;
 
+  void update() override;
+
+  void on_read_response(int value) override;
+
  protected:
 
   void on_dump_memory_(std::string memory, int start, int end);
-  void dump_address_(uint8_t memory, uint8_t address, uint8_t address_max);
+  void dump_address_(uint8_t address);
+  void dump_config_internal_() override;
 
   //http_request::HttpRequestComponent *http_request_;
-  std::stringstream dump_;
+  std::string dump_;
+  uint8_t address_max_{0xFF};
 };
 
 }  // namespace extraflame

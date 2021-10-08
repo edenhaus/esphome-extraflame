@@ -1,5 +1,7 @@
 #include "extraflame_dump.h"
 #include "esphome/core/log.h"
+#include "esphome/components/extraflame/util.h"
+#include <sstream>
 
 
 namespace esphome {
@@ -8,6 +10,8 @@ namespace extraflame {
 static const char *TAG = "extraflame.dump";
 
 void ExtraflameDump::setup() {
+  ExtraflameComponent::setup();
+
   // Declare a service "dump_memory"
   //  - Service will be called "esphome.<NODE_NAME>_dump_memory" in Home Assistant.
   //  - The service has one arguments (type inferred from method definition):
@@ -18,8 +22,34 @@ void ExtraflameDump::setup() {
   register_service(&ExtraflameDump::on_dump_memory_, "dump_memory", {"memory", "start", "end"});
 }
 
+void ExtraflameDump::update(){
+  // do nothing only overriding the super method
+}
+
 void ExtraflameDump::dump_config() {
   ESP_LOGCONFIG(TAG, "ExtraflameDump:");
+}
+
+void ExtraflameDump::on_read_response(int value) {
+  ESP_LOGD(TAG, "Got value for %d: %d", (int)this->address_, value);
+
+  std::stringstream ss;
+  ss << "\"" << (int)this->address_ << "\":" << value;
+
+  auto new_address = this->get_address()+1;
+
+  if (new_address > this->address_max_){
+    ss << "}";
+    this->dump_.append(ss.str());
+
+    ESP_LOGI(TAG, "Performing http request");
+    ESP_LOGD(TAG, "Dump=%s", this->dump_.c_str());
+  }
+  else {
+    ss << ",";
+    this->dump_.append(ss.str());
+    this->dump_address_(new_address);
+  }
 }
 
 
@@ -33,35 +63,24 @@ void ExtraflameDump::on_dump_memory_(std::string memory, int start, int end) {
   } else if (start > end){
     ESP_LOGE(TAG, "'start' must be lower or equal to 'end'");
   } else {
-    this->dump_.clear();
-    this->dump_ << "{";
+    this->dump_ = "{";
 
-    ESP_LOGI(TAG, "Test on_dump_memory_");
+    this->address_max_ = (uint8_t) end;
 
-    this->dump_address_(memory2hex(memory), (uint8_t) start, (uint8_t) end);
+    this->memory_ = memory2hex(memory);
+    this->dump_address_((uint8_t) start);
   }
 }
 
-void ExtraflameDump::dump_address_(uint8_t memory, uint8_t address, uint8_t address_max) {
-    ESP_LOGI(TAG, "Test dump_address_");
-
-  auto request = ExtraflameRequest{
-      .command = {memory, address}, .on_response = [this, memory, address, address_max](int value, bool success) mutable {
-        ESP_LOGI(TAG, "0x%02X; 0x%02X; 0x%02X; %d", memory, address, (uint8_t) value, value);
-        this->dump_ << "\"" << address << "\":";
-
-        if (address <= address_max) {
-          this->dump_ << ",";
-          this->dump_address_(memory, address + 1, address_max);
-        }
-        else{
-          this->dump_ << "}";
-          ESP_LOGI(TAG, "Writing json output and posting it");
-          ESP_LOGI(TAG, "Juhu 2 %s", this->dump_.str().c_str());
-        }
-      }};
-  this->parent_->add_request(request, false);
+void ExtraflameDump::dump_address_(uint8_t address){
+    this->address_ = address;
+    auto request = ExtraflameRequest{
+      .command = {this->get_memory(), address}
+    };
+    this->parent_->add_request(request, false);
 }
+
+void ExtraflameDump::dump_config_internal_() { }
 
 
 }  // namespace extraflame

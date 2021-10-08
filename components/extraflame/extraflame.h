@@ -13,13 +13,7 @@ struct ExtraflameRequest {
   std::function<void(uint8_t, bool)> on_response;
 };
 
-static uint8_t memory2hex(std::string memory) {
-  if (memory == "EEPROM") {
-    return 0x20;
-  }
 
-  return 0x00;
-}
 
 class ExtraflameComponent;
 
@@ -56,11 +50,13 @@ class ExtraflameHub : public Component,
 
 class ExtraflameComponent : public PollingComponent, public Parented<ExtraflameHub> {
  public:
-  explicit ExtraflameComponent(std::string memory, uint8_t address);
+  explicit ExtraflameComponent(uint8_t memory, uint8_t address){
+    this->memory_ = memory;
+    this->address_ = address;
+  }
 
-  std::string get_memory() const { return this->memory_; }
   uint8_t get_address() const { return this->address_; }
-  uint8_t get_memory_hex() const { return this->memory_hex_; }
+  uint8_t get_memory() const { return this->memory_; }
 
   void setup() override;
 
@@ -74,9 +70,8 @@ class ExtraflameComponent : public PollingComponent, public Parented<ExtraflameH
   virtual void dump_config_internal_() = 0;
 
   std::vector<uint8_t> command_;
-  std::string memory_;
   uint8_t address_;
-  uint8_t memory_hex_;
+  uint8_t memory_;
 };
 
 }  // namespace extraflame

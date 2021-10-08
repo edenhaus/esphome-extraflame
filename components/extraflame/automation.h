@@ -1,10 +1,18 @@
 #pragma once
 
-#include "extraflame.h"
 #include "esphome/core/automation.h"
+#include "extraflame.h"
 
 namespace esphome {
 namespace extraflame {
+
+  static uint8_t memory2hex(std::string memory) {
+  if (memory == "EEPROM") {
+    return 0x20;
+  }
+
+  return 0x00;
+}
 
 template<typename... Ts> class ExtraflameWriteAction : public Action<Ts...>, public Parented<ExtraflameHub> {
  public:

@@ -116,9 +116,9 @@ void ExtraflameHub::reset_input_buffer() {
 
 void ExtraflameHub::add_component(ExtraflameComponent *component) { this->components_.push_back(component); }
 
-void ExtraflameHub::notify_components_(uint8_t memory_hex, uint8_t address, int value) {
+void ExtraflameHub::notify_components_(uint8_t memory, uint8_t address, int value) {
   for (auto *component : this->components_) {
-    if (memory_hex == component->get_memory_hex() && address == component->get_address()) {
+    if (memory == component->get_memory() && address == component->get_address()) {
       component->on_read_response(value);
     }
   }
@@ -129,20 +129,18 @@ bool ExtraflameHub::is_request_echo_(std::array<uint8_t, 2> response, int reques
          this->request_.command[request_part_num + 1] == response[1];
 }
 
-ExtraflameComponent::ExtraflameComponent(std::string memory, uint8_t address) {
-  this->memory_ = memory;
-  this->address_ = address;
-  this->memory_hex_ = memory2hex(memory);
-}
-
 void ExtraflameComponent::setup() { this->parent_->add_component(this); }
 
-void ExtraflameComponent::update() { this->parent_->add_request({this->get_memory_hex(), this->get_address()}); }
+void ExtraflameComponent::update() { this->parent_->add_request({this->get_memory(), this->get_address()}); }
 
 void ExtraflameComponent::dump_config_internal() {
   this->dump_config_internal_();
   ESP_LOGCONFIG(TAG, "    Update Interval: %.1fs", this->get_update_interval() / 1000.0f);
-  ESP_LOGCONFIG(TAG, "    Memory: %s", this->get_memory().c_str());
+  if (this->get_memory() == 0x20) {
+    ESP_LOGCONFIG(TAG, "    Memory: EEPROM (0x20)");
+  } else {
+    ESP_LOGCONFIG(TAG, "    Memory: RAM (0x00)");
+  }
   ESP_LOGCONFIG(TAG, "    Address: 0x%02X", this->get_address());
 }
 
