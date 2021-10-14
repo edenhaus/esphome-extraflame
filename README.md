@@ -1,6 +1,11 @@
 # EspHome-Extraflame
 
-Custom component for EspHome to control your extraflame oven
+Custom component for EspHome to control your extraflame oven.
+
+**I will not anwser to mails, written about this project!! A issue can be read from anyone and a mail is only between two people.
+I don't know why only germans are writting mails, but the question is always the same: I'm already using this component and I will improve it when I have time.**
+
+I will describe here only the software part. The wiring with the board can be done in different ways. Some are described [here](https://k3a.me/ir-controller-for-pellet-stove-with-micronova-controller-stufe-e-pellet-aria-ir-telecomando/)
 
 ## 1. Installation
 
