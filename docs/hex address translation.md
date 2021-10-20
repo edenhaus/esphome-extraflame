@@ -1,5 +1,9 @@
 # Extraflame Address Translation
 
+Below my analysis of my oven. As I cannot find any model number on it, a image of it can be found [here](images/board.jpeg).
+
+All description beginning with `??`, means I'm not sure and it's only a fast assumption.
+
 ## RAM (0x00)
 
 | **Address** | **Formula** | **Unit** | **Description**                           | **Ex. value (dec)** |
