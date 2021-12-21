@@ -13,18 +13,22 @@ ExtraflameHub = extraflame_ns.class_("ExtraflameHub", cg.Component, uart.UARTDev
 ExtraflameComponent = extraflame_ns.class_("ExtraflameComponent", cg.PollingComponent)
 ExtraflameWriteAction = extraflame_ns.class_("ExtraflameWriteAction", automation.Action)
 
-EXTRAFLAME_COMPONENT_SCHEMA = cv.polling_component_schema("60s").extend({
-    cv.GenerateID(CONF_EXTRAFLAME_ID): cv.use_id(ExtraflameHub),
+EXTRAFLAME_COMPONENT_SCHEMA = cv.polling_component_schema("60s").extend(
+    {
+        cv.GenerateID(CONF_EXTRAFLAME_ID): cv.use_id(ExtraflameHub),
+        cv.Required(CONF_ADDRESS): cv.hex_uint8_t,
+        cv.Required(CONF_MEMORY): cv.one_of(MEMORY_RAM, MEMORY_EEPROM, upper=True),
+    }
+)
 
-    cv.Required(CONF_ADDRESS): cv.hex_uint8_t,
-    cv.Required(CONF_MEMORY): cv.one_of(MEMORY_RAM, MEMORY_EEPROM, upper=True)
-})
 
 CONFIG_SCHEMA = (
-    cv.Schema({
-        cv.GenerateID(): cv.declare_id(ExtraflameHub),
-        cv.Optional(CONF_DUMP, default=False): cv.boolean,
-    })
+    cv.Schema(
+        {
+            cv.GenerateID(): cv.declare_id(ExtraflameHub),
+            cv.Optional(CONF_DUMP, default=False): cv.boolean,
+        }
+    )
     .extend(cv.COMPONENT_SCHEMA)
     .extend(uart.UART_DEVICE_SCHEMA)
 )

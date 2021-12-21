@@ -8,12 +8,16 @@ from ..const import CONF_EXTRAFLAME_ID, CONF_MEMORY
 DEPENDENCIES = ["extraflame"]
 CODEOWNERS = ["@edenhaus"]
 
-ExtraflameSensor = extraflame_ns.class_("ExtraflameSensor", ExtraflameComponent, sensor.Sensor)
+ExtraflameSensor = extraflame_ns.class_(
+    "ExtraflameSensor", ExtraflameComponent, sensor.Sensor
+)
 
 CONFIG_SCHEMA = EXTRAFLAME_COMPONENT_SCHEMA.extend(
-    sensor.SENSOR_SCHEMA.extend({
-        cv.GenerateID(): cv.declare_id(ExtraflameSensor),
-    })
+    sensor.SENSOR_SCHEMA.extend(
+        {
+            cv.GenerateID(): cv.declare_id(ExtraflameSensor),
+        }
+    )
 )
 
 

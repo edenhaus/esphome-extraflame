@@ -6,10 +6,9 @@ packages:
   # lowest priority (should be device base)
   base: !include devices/base.yaml # in this file the esphome, api, wifi config is
 
-
 external_components:
   - source: github://edenhaus/esphome-extraflame
-    components: [ extraflame ]
+    components: [extraflame]
 
 uart:
   tx_pin: GPIO25
@@ -128,6 +127,6 @@ api:
         value: int
       then:
         extraflame.write:
-            memory: RAM
-            address: !lambda return address;
-            value: !lambda return value;
+          memory: RAM
+          address: !lambda return address;
+          value: !lambda return value;
