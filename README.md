@@ -2,8 +2,7 @@
 
 Custom component for EspHome to control your extraflame oven.
 
-**I will not anwser to mails, written about this project!! A issue can be read from anyone and a mail is only between two people.
-I don't know why only germans are writting mails, but the question is always the same: I'm already using this component and I will improve it when I have time.**
+**I will not anwser to mails, written about this project!! A issue can be read from anyone and a mail is only between two people.**
 
 I will describe here only the software part. The wiring with the board can be done in different ways. Some are described [here](https://k3a.me/ir-controller-for-pellet-stove-with-micronova-controller-stufe-e-pellet-aria-ir-telecomando/)
 
@@ -32,10 +31,6 @@ uart:
 
 extraflame:
 ```
-
-| Name   |   Type    | Default | Description      |
-| ------ | :-------: | ------- | ---------------- |
-| `dump` | `boolean` | false   | See dump section |
 
 ### 2.1. Sensor
 
@@ -94,32 +89,37 @@ Here is what every options means:
 All fields can be used with template and lambdas. More information about action can be found in the official [documentation](https://esphome.io/guides/automations.html).
 Before writing the value to the memory, a read request is send to verify if a write command is necessary. This should reduce unnecessary write as the EEPROM can has only a certain number of writes.
 
-## 4. Dump
+## 4. Dumping values
 
-If you enable the `dump` option, a new home assistant is created with give the possibility to dump all values from the two memories.
-The values are logged on level info. Therefore you need be connected to the device to get it.
-The main purpose for this functionality is that different oven store the data on different addresses. It should be only activated for debugging or configuration.
+As different oven, stores the interesting data on different addresses, we need a way to dump all or certain values.
+To use the "dumping" as flexable as possible, dumping is an action. More information about action and automation can be found [here](https://esphome.io/guides/automations.html).
 
-Here an example, how to call the service in home assistant:
 
 ```yaml
-service: esphome.esp13_dump_memory
-data:
-  memory: RAM
-  start: 0x00
-  end: 0xFF
+- extraflame.dump:
+    memory: RAM
+    start: 0x00
+    end: 0xFF
+    on_dump_finish:
+      then:
+        - http_request.send:
+            method: POST
+            url: your_URL
+            headers:
+              Content-Type: application/json
+            body: !lambda return data.c_str();
 ```
 
 Here is what every options means:
 
-| Name     |      Type      | Default      | Description                                                                        |
-| -------- | :------------: | ------------ | ---------------------------------------------------------------------------------- |
-| `memory` |    `string`    | **Required** | `RAM` or `EEPROM`                                                                  |
-| `start`  | `(hex) number` | **Required** | From which address the values are dumped. Values must be between 0x0 - 0xFF (255)  |
-| `end`    | `(hex) number` | **Required** | Until which address the values are dumped. Values must be between 0x0 - 0xFF (255) |
+| Name             |      Type      | Default      | Description                                                                        |
+|------------------|:--------------:| ------------ |------------------------------------------------------------------------------------|
+| `memory`         |    `string`    | **Required** | `RAM` or `EEPROM`                                                                  |
+| `start`          | `(hex) number` | **Required** | From which address the values are dumped. Values must be between 0x0 - 0xFF (255)  |
+| `end`            | `(hex) number` | **Required** | Until which address the values are dumped. Values must be between 0x0 - 0xFF (255) |
+| `on_dump_finish` |  `Automation`  | **Required** | An automation to perform when the dumping is finished.                             |
 
-The output should be than something similar to:
-![Dump](docs/images/dump.png)
+Please check out the [example](example.yaml) for a complete example.
 
 ## 5. Roadmap
 
