@@ -11,7 +11,7 @@ namespace esphome
     class ExtraflameSensor : public ExtraflameComponent, public sensor::Sensor
     {
     public:
-      explicit ExtraflameSensor(std::string memory, uint8_t address) : ExtraflameComponent(memory, address) {}
+      explicit ExtraflameSensor(uint8_t memory, uint8_t address) : ExtraflameComponent(memory, address) {}
 
       float get_setup_priority() const override { return setup_priority::LATE; }
 

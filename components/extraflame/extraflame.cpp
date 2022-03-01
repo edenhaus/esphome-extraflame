@@ -1,5 +1,9 @@
 #include "extraflame.h"
 #include "esphome/core/log.h"
+#ifdef USE_EXTRAFLAME_DUMP
+#include <sstream>
+#include <iomanip>
+#endif
 
 namespace esphome
 {
@@ -22,29 +26,11 @@ namespace esphome
       return command;
     }
 
-#ifdef USE_EXTRAFLAME_DUMP
-    static const char *TAG_DUMP = "extraflame.dump";
-
-    void ExtraflameHub::setup()
-    {
-      // Declare a service "dump_memory"
-      //  - Service will be called "esphome.<NODE_NAME>_dump_memory" in Home Assistant.
-      //  - The service has one arguments (type inferred from method definition):
-      //     - memory: string
-      //     - start: int (0-255) start<=end
-      //     - end: int (0-255)
-      //  - The function start_washer_cycle declared below will attached to the service.
-      register_service(&ExtraflameHub::on_dump_memory_, "dump_memory", {"memory", "start", "end"});
-    }
-#endif
-
     void ExtraflameHub::dump_config()
     {
       ESP_LOGCONFIG(TAG, "ExtraflameHub:");
 #ifdef USE_EXTRAFLAME_DUMP
-      ESP_LOGCONFIG(TAG, "  Dump: true");
-#else
-      ESP_LOGCONFIG(TAG, "  Dump: false");
+      ESP_LOGCONFIG(TAG, "  Dump functionality included");
 #endif
 
       for (auto *component : this->components_)
@@ -95,45 +81,91 @@ namespace esphome
         }
         this->status_ = NO_REQUEST;
       }
-      process_request_queue_();
+
+      next_request_();
     }
 
-    void ExtraflameHub::process_request_queue_()
+    void ExtraflameHub::next_request_()
     {
-      if (this->status_ == NO_REQUEST && !this->request_queue_.empty())
+      if (this->status_ == NO_REQUEST)
       {
-        this->status_ = REQUEST_SEND;
-        this->request_ = this->request_queue_.front();
-        this->request_queue_.erase(request_queue_.begin());
-        this->set_timeout(CURRENT_REQUEST, 1000, [this] {
-          if (this->request_.command.size() == 2)
-          {
-            ESP_LOGW(TAG, "No response for given command: 0x%02X 0x%02X", this->request_.command[0],
-                     this->request_.command[1]);
-          }
-          else
-          {
-            ESP_LOGW(TAG, "No response for given command: 0x%02X 0x%02X  0x%02X  0x%02X", this->request_.command[0],
-                     this->request_.command[1], this->request_.command[2], this->request_.command[3]);
-          }
-          this->reset_input_buffer();
-          if (this->request_.on_response != nullptr)
-          {
-            this->request_.on_response(0x00, false);
-          }
-          this->status_ = NO_REQUEST;
-        });
+#ifdef USE_EXTRAFLAME_DUMP
+        if (this->dump_.current <= this->dump_.end && this->is_dumping())
+        {
+          ESP_LOGD(TAG, "Dump 0x%02X", this->dump_.current);
+
+          auto request = ExtraflameRequest{
+              .command = {this->dump_.memory, this->dump_.current},
+              .on_response = [this](uint8_t value, bool success) {
+                if (success)
+                {
+                  std::ostringstream s1, s2;
+                  s1 << this->dump_.data << ",\"0x" << std::hex << static_cast<int>(this->dump_.current)<< "\":";
+                  s2 << s1.str() << int(value);
+                  this->dump_.data = s2.str();
+                }
+                if (this->dump_.current == this->dump_.end)
+                {
+                  this->dump_.data = this->dump_.data + "}";
+                  ESP_LOGD(TAG, "Dump complete");
+                  for (auto *trigger : this->finish_triggers_){
+                    trigger->process(this->dump_.data);
+                  }
+                  this->dump_.data = "";
+                }
+                else
+                {
+                  this->dump_.current = this->dump_.current + 1;
+                }
+              }};
+
+          this->send_request_(request);
+          return; //required
+        }
+#endif
+        if (!this->request_queue_.empty())
+        {
+          auto request = this->request_queue_.front();
+          this->request_queue_.erase(request_queue_.begin());
+          this->send_request_(request);
+        }
+      }
+    }
+
+    void ExtraflameHub::send_request_(ExtraflameRequest request)
+    {
+      this->status_ = REQUEST_SEND;
+      this->request_ = request;
+      this->set_timeout(CURRENT_REQUEST, 1000, [this] {
         if (this->request_.command.size() == 2)
         {
-          ESP_LOGV(TAG, "Sending request: 0x%02X 0x%02X", this->request_.command[0], this->request_.command[1]);
+          ESP_LOGW(TAG, "No response for given command: 0x%02X 0x%02X", this->request_.command[0],
+                   this->request_.command[1]);
         }
         else
         {
-          ESP_LOGV(TAG, "Sending request: 0x%02X 0x%02X  0x%02X  0x%02X", this->request_.command[0],
+          ESP_LOGW(TAG, "No response for given command: 0x%02X 0x%02X  0x%02X  0x%02X", this->request_.command[0],
                    this->request_.command[1], this->request_.command[2], this->request_.command[3]);
         }
-        this->write_array(this->request_.command);
+        this->reset_input_buffer();
+        if (this->request_.on_response != nullptr)
+        {
+          this->request_.on_response(0x00, false);
+        }
+        this->status_ = NO_REQUEST;
+      });
+
+      if (this->request_.command.size() == 2)
+      {
+        ESP_LOGV(TAG, "Sending request: 0x%02X 0x%02X", this->request_.command[0], this->request_.command[1]);
       }
+      else
+      {
+        ESP_LOGV(TAG, "Sending request: 0x%02X 0x%02X  0x%02X  0x%02X", this->request_.command[0],
+                 this->request_.command[1], this->request_.command[2], this->request_.command[3]);
+      }
+
+      this->write_array(this->request_.command);
     }
 
     void ExtraflameHub::add_request(ExtraflameRequest request, bool priority)
@@ -147,7 +179,7 @@ namespace esphome
       {
         this->request_queue_.push_back(request);
       }
-      this->process_request_queue_();
+      this->next_request_();
     }
 
     void ExtraflameHub::add_request(std::vector<uint8_t> command)
@@ -168,11 +200,11 @@ namespace esphome
 
     void ExtraflameHub::add_component(ExtraflameComponent *component) { this->components_.push_back(component); }
 
-    void ExtraflameHub::notify_components_(uint8_t memory_hex, uint8_t address, int value)
+    void ExtraflameHub::notify_components_(uint8_t memory, uint8_t address, int value)
     {
       for (auto *component : this->components_)
       {
-        if (memory_hex == component->get_memory_hex() && address == component->get_address())
+        if (memory == component->get_memory() && address == component->get_address())
         {
           component->on_read_response(value);
         }
@@ -186,59 +218,53 @@ namespace esphome
     }
 
 #ifdef USE_EXTRAFLAME_DUMP
-    void ExtraflameHub::on_dump_memory_(std::string memory, int start, int end)
+    void ExtraflameHub::start_dumping(uint8_t memory, uint8_t start, uint8_t end, const std::vector<ExtraflameDumpFinishTrigger *> &finish_triggers)
     {
-      ESP_LOGD(TAG, "Starting to dump all config values of %s", memory.c_str());
+      ESP_LOGD(TAG, "Starting to dump config values of 0x%02X", memory);
 
-      if (start < 0 || start > 255)
-      {
-        ESP_LOGE(TAG, "'start' value is invalid!! Must be between 0 - 255 but was %d", start);
-      }
-      else if (end < 0 || end > 255)
-      {
-        ESP_LOGE(TAG, "'end' value is invalid!! Must be between 0 - 255 but was %d", end);
-      }
-      else if (start > end)
+      if (start > end)
       {
         ESP_LOGE(TAG, "'start' must be lower or equal to 'end'");
       }
+      else if (this->is_dumping())
+      {
+        ESP_LOGE(TAG, "Already dumping!");
+      }
       else
       {
-        this->dump_address_(memory2hex(memory), (uint8_t)start, (uint8_t)end);
+        this->request_queue_.clear();
+        std::ostringstream stringStream;
+        stringStream << "{\"memory\":\"0x" << std::hex << static_cast<int>(memory) << "\"";
+        this->dump_ = Dump{
+            .memory = memory,
+            .current = start,
+            .end = end,
+            .data = stringStream.str()};
+        this->finish_triggers_ = finish_triggers;
       }
     }
 
-    void ExtraflameHub::dump_address_(uint8_t memory, uint8_t address, uint8_t address_max)
+    bool ExtraflameHub::is_dumping()
     {
-      auto request = ExtraflameRequest{
-          .command = {memory, address}, .on_response = [this, memory, address, address_max](int value, bool success) {
-            ESP_LOGI(TAG_DUMP, "0x%02X; 0x%02X; 0x%02X; %d", memory, address, (uint8_t)value, value);
-
-            if (address != address_max)
-            {
-              this->dump_address_(memory, address + 1, address_max);
-            }
-          }};
-      this->add_request(request, false);
+      return this->dump_.data != "";
     }
 #endif
 
-    ExtraflameComponent::ExtraflameComponent(std::string memory, uint8_t address)
+    ExtraflameComponent::ExtraflameComponent(uint8_t memory, uint8_t address)
     {
       this->memory_ = memory;
       this->address_ = address;
-      this->memory_hex_ = memory2hex(memory);
     }
 
     void ExtraflameComponent::setup() { this->parent_->add_component(this); }
 
-    void ExtraflameComponent::update() { this->parent_->add_request({this->get_memory_hex(), this->get_address()}); }
+    void ExtraflameComponent::update() { this->parent_->add_request({this->get_memory(), this->get_address()}); }
 
     void ExtraflameComponent::dump_config_internal()
     {
       this->dump_config_internal_();
       ESP_LOGCONFIG(TAG, "    Update Interval: %.1fs", this->get_update_interval() / 1000.0f);
-      ESP_LOGCONFIG(TAG, "    Memory: %s", this->get_memory().c_str());
+      ESP_LOGCONFIG(TAG, "    Memory: 0x%02X", this->get_memory());
       ESP_LOGCONFIG(TAG, "    Address: 0x%02X", this->get_address());
     }
 
