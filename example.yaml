@@ -19,11 +19,11 @@ uart:
   stop_bits: 2
 
 extraflame:
-  dump: false
+http_request:
 
 text_sensor:
   - platform: template
-    name: Status
+    name: ${name} Status
     id: oven_status
 
 sensor:
@@ -32,6 +32,11 @@ sensor:
     address: 0x01
     id: oven_temp
     name: Temperature
+    unit_of_measurement: "°C"
+    icon: "mdi:thermometer"
+    device_class: "temperature"
+    state_class: "measurement"
+    accuracy_decimals: 1
     filters:
       - multiply: 0.5
 
@@ -83,50 +88,71 @@ sensor:
     name: ${name} Stufe
     filters:
       # See docs
-      - lambda: |-
-          auto level = x - 200;
-          if (level > 5) {
-            level = level - 16;
-          }
-          return level;
+      - lambda: return ((int)x & 0x0F) - 0x8;
+      #return ((int)x % 16) - 8;
 
-climate:
-  - platform: bang_bang
-    name: Oven
-    sensor: oven_temp
-    default_target_temperature_low: 17 °C
-    default_target_temperature_high: 20 °C
-    heat_action:
+button:
+  - platform: template
+    name: ${name} Start
+    on_press:
+      - logger.log: Button Anzünden
+      - if:
+          condition:
+            lambda: return id(oven_status_raw).state == 0;
+          then:
+            extraflame.write:
+              memory: RAM
+              address: 0x21
+              value: 0x01
+  - platform: template
+    name: ${name} Shutdown
+    on_press:
+      - logger.log: Button Ausschalten
+      - if:
+          condition:
+            lambda: |-
+              auto status = id(oven_status_raw).state;
+              return status > 0 && status < 6;
+          then:
+            extraflame.write:
+              memory: RAM
+              address: 0x21
+              value: 0x06
+
+script:
+  - id: script_dumping
+    then:
+      - while:
+          condition:
+            lambda: return true;
+          then:
+            - wait_until:
+                not:
+                  extraflame.is_dumping:
+            - extraflame.dump:
+                memory: RAM
+                start: 0x00
+                end: 0xFF
+                on_dump_finish:
+                  then:
+                    - http_request.send:
+                        method: POST
+                        url: your_URL
+                        headers:
+                          Content-Type: application/json
+                        body: !lambda return data.c_str();
+
+switch:
+  - platform: template
+    name: "Dumping"
+    lambda: |-
+      return id(script_dumping).is_running();
+    turn_on_action:
       if:
         condition:
-          sensor.in_range:
-            id: oven_status_raw
-            below: 0
+          not:
+            script.is_running: script_dumping
         then:
-          extraflame.write:
-            memory: RAM
-            address: 0x21
-            value: 0x01
-    idle_action:
-      if:
-        condition:
-          lambda: |-
-            auto state = id(oven_status_raw).state;
-            return state > 0 && state < 6;
-        then:
-          extraflame.write:
-            memory: RAM
-            address: 0x21
-            value: 0x06
-
-api:
-  services:
-    - service: write_value_ram
-      variables:
-        address: int
-        value: int
-      then:
-        extraflame.write:
-          memory: RAM
-          address: !lambda return address;
-          value: !lambda return value;
+          script.execute: script_dumping
+    turn_off_action:
+      script.stop: script_dumping
