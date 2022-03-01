@@ -112,12 +112,12 @@ To use the "dumping" as flexable as possible, dumping is an action. More informa
 
 Here is what every options means:
 
-| Name             |      Type      | Default      | Description                                                                        |
-|------------------|:--------------:| ------------ |------------------------------------------------------------------------------------|
-| `memory`         |    `string`    | **Required** | `RAM` or `EEPROM`                                                                  |
-| `start`          | `(hex) number` | **Required** | From which address the values are dumped. Values must be between 0x0 - 0xFF (255)  |
-| `end`            | `(hex) number` | **Required** | Until which address the values are dumped. Values must be between 0x0 - 0xFF (255) |
-| `on_dump_finish` |  `Automation`  | **Required** | An automation to perform when the dumping is finished.                             |
+| Name             |      Type      | Default      | Description                                                                                                               |
+|------------------|:--------------:| ------------ |---------------------------------------------------------------------------------------------------------------------------|
+| `memory`         |    `string`    | **Required** | `RAM` or `EEPROM`                                                                                                         |
+| `start`          | `(hex) number` | **Required** | From which address the values are dumped. Values must be between 0x0 - 0xFF (255)                                         |
+| `end`            | `(hex) number` | **Required** | Until which address the values are dumped. Values must be between 0x0 - 0xFF (255)                                        |
+| `on_dump_finish` |  `Automation`  | **Required** | An automation to perform when the dumping is finished. The dumped values are passed as json string variable named `data`. |
 
 Please check out the [example](example.yaml) for a complete example.
 
