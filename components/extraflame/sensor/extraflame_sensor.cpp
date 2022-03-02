@@ -9,7 +9,7 @@ namespace esphome
 
     void ExtraflameSensor::on_read_response(uint8_t value)
     {
-      ESP_LOGD(TAG, "Got value: 0x%02X (%d)", value);
+      ESP_LOGD(TAG, "Got value: 0x%1$02X (%1$d)", value);
       this->publish_state(value);
     }
 
