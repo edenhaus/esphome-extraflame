@@ -1,7 +1,7 @@
 #pragma once
 
-#include "esphome/components/extraflame/extraflame.h"
 #include "esphome/components/sensor/sensor.h"
+#include "../extraflame.h"
 
 namespace esphome
 {
@@ -15,7 +15,7 @@ namespace esphome
 
       float get_setup_priority() const override { return setup_priority::LATE; }
 
-      void on_read_response(int value) override;
+      void on_read_response(uint8_t value) override;
 
     protected:
       void dump_config_internal_() override;

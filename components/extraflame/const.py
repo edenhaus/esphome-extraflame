@@ -3,5 +3,6 @@ CONF_MEMORY = "memory"
 CONF_ON_DUMP_FINISH = "on_dump_finish"
 CONF_START = "start"
 CONF_END = "end"
+CONF_WRITE_LAMBDA = "write_lambda"
 
 MEMORY_ADDRESSES = {"RAM": 0x00, "EEPROM": 0x020}

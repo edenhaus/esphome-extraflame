@@ -58,7 +58,7 @@ namespace esphome
         }
 
         this->cancel_timeout(CURRENT_REQUEST);
-        int value = response[1];
+        uint8_t value = response[1];
         bool success = true;
 
         // checksum is calculated by (memory + address + value) & 0xFF
@@ -71,8 +71,7 @@ namespace esphome
         }
         else
         {
-          this->notify_components_(get_memory_from_command(this->request_.command[0]), this->request_.command[1],
-                                   int(value));
+          this->notify_components_(get_memory_from_command(this->request_.command[0]), this->request_.command[1], value);
         }
 
         if (this->request_.on_response != nullptr)
@@ -100,7 +99,7 @@ namespace esphome
                 if (success)
                 {
                   std::ostringstream s1, s2;
-                  s1 << this->dump_.data << ",\"0x" << std::hex << static_cast<int>(this->dump_.current)<< "\":";
+                  s1 << this->dump_.data << ",\"0x" << std::hex << static_cast<int>(this->dump_.current) << "\":";
                   s2 << s1.str() << int(value);
                   this->dump_.data = s2.str();
                 }
@@ -108,7 +107,8 @@ namespace esphome
                 {
                   this->dump_.data = this->dump_.data + "}";
                   ESP_LOGD(TAG, "Dump complete");
-                  for (auto *trigger : this->finish_triggers_){
+                  for (auto *trigger : this->finish_triggers_)
+                  {
                     trigger->process(this->dump_.data);
                   }
                   this->dump_.data = "";
@@ -200,7 +200,7 @@ namespace esphome
 
     void ExtraflameHub::add_component(ExtraflameComponent *component) { this->components_.push_back(component); }
 
-    void ExtraflameHub::notify_components_(uint8_t memory, uint8_t address, int value)
+    void ExtraflameHub::notify_components_(uint8_t memory, uint8_t address, uint8_t value)
     {
       for (auto *component : this->components_)
       {

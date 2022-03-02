@@ -5,10 +5,9 @@ namespace esphome
 {
   namespace extraflame
   {
-
     static const char *TAG = "extraflame.sensor";
 
-    void ExtraflameSensor::on_read_response(int value)
+    void ExtraflameSensor::on_read_response(uint8_t value)
     {
       ESP_LOGD(TAG, "Got value: %d", value);
       this->publish_state(value);

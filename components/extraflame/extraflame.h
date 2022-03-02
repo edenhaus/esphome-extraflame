@@ -40,7 +40,7 @@ namespace esphome
 
 #ifdef USE_EXTRAFLAME_DUMP
       void start_dumping(uint8_t memory, uint8_t start, uint8_t end, const std::vector<ExtraflameDumpFinishTrigger *> &finish_triggers);
-      
+
       bool is_dumping();
 #endif
 
@@ -67,7 +67,7 @@ namespace esphome
 
       void next_request_();
       void send_request_(ExtraflameRequest request);
-      void notify_components_(uint8_t memory_hex, uint8_t address, int value);
+      void notify_components_(uint8_t memory_hex, uint8_t address, uint8_t value);
       bool is_request_echo_(std::array<uint8_t, 2> response, int request_part_num);
 
 #ifdef USE_EXTRAFLAME_DUMP
@@ -95,7 +95,7 @@ namespace esphome
 
       void dump_config_internal();
 
-      virtual void on_read_response(int value) = 0;
+      virtual void on_read_response(uint8_t value) = 0;
 
     protected:
       virtual void dump_config_internal_() = 0;
