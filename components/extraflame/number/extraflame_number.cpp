@@ -61,7 +61,9 @@ namespace esphome
                         value_write = val.value();
                     }
 
-                    if (value_write != value)
+                    ESP_LOGD(TAG, "Writing following value: 0x%02X", value_write);
+
+                    /*if (value_write != value)
                     {
                         // we need to update the value only if they are not the same
                         uint8_t write_memory = 0x80 + this->memory_;
@@ -79,7 +81,7 @@ namespace esphome
                                 }
                             }};
                         this->parent_->add_request(write_request, true);
-                    }
+                    }*/
                 }};
             this->parent_->add_request(request, true);
         }
