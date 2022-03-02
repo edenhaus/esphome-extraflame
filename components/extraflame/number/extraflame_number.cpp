@@ -17,7 +17,7 @@ namespace esphome
                 auto val = (*this->transform_func_)(value);
                 if (val.has_value())
                 {
-                    ESP_LOGD(TAG, "Lambda returned value: %d", val.value());
+                    ESP_LOGD(TAG, "Lambda returned value: %f", val.value());
                     this->publish_state(val.value());
                 }
                 else
@@ -43,7 +43,7 @@ namespace esphome
                 .on_response = [this, value](uint8_t current_value, bool success) {
                     if (!success)
                     {
-                        ESP_LOGE("Couldn't get number value");
+                        ESP_LOGE(TAG, "Couldn't get number value");
                         return;
                     }
 
@@ -77,7 +77,7 @@ namespace esphome
                                 }
                                 else
                                 {
-                                    ESP_LOGE("Couldn't update number");
+                                    ESP_LOGE(TAG, "Couldn't update number");
                                 }
                             }};
                         this->parent_->add_request(write_request, true);
