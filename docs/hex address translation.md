@@ -383,27 +383,28 @@ Ex.:
 
 ### Flag&Level
 
-Value is composed of night/day temperature activated flag and oven level
-Least significant digit specifies the level, the high one if the feature is enabled
+Value is composed of by 5 binary encoded flags and the oven level.
+The 5 high significant bits, specifies the following flags in order:
+- unknown
+- unknown
+- unknown
+- night/day temperature feature enabled
+- unknown
 
+The three least significant bits specified the level.
 To get the night/day temperature flag to the following:
 
 ```c++
-auto flag = (x & 0xF0);
-return flag == 0xC
+return x & 0x10;
 ```
 
 To find out the current level use the following snippet:
 
 ```c++
-return (x & 0x0F) - 0x8;
+return x & 0x07;
 ```
 
 Ex.:
 
 - `0xDD (221)` -> Night/Day disabled, Level 5
-- `0xDB (219)` -> Night/Day disabled, Level 3
-- `0xD9 (217)` -> Night/Day disabled, Level 1
-- `0xCD (205)` -> Night/Day enabled, Level 5
-- `0xCB (203)` -> Night/Day enabled, Level 3
 - `0xC9 (201)` -> Night/Day enabled, Level 1

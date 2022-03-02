@@ -9,7 +9,7 @@ namespace esphome
 
         void ExtraflameNumber::on_read_response(uint8_t value)
         {
-            ESP_LOGD(TAG, "Got value: %d", value);
+            ESP_LOGD(TAG, "Got value: 0x%02X (%d)", value);
             // Is there a lambda registered call it with the value
             if (this->transform_func_.has_value())
             {
@@ -63,7 +63,7 @@ namespace esphome
 
                     ESP_LOGD(TAG, "Writing following value: 0x%02X", value_write);
 
-                    /*if (value_write != value)
+                    if (value_write != value)
                     {
                         // we need to update the value only if they are not the same
                         uint8_t write_memory = 0x80 + this->memory_;
@@ -81,7 +81,7 @@ namespace esphome
                                 }
                             }};
                         this->parent_->add_request(write_request, true);
-                    }*/
+                    }
                 }};
             this->parent_->add_request(request, true);
         }
