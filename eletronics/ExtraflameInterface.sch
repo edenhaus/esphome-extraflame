@@ -1,0 +1,170 @@
+EESchema Schematic File Version 4
+EELAYER 30 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L Connector_Generic:Conn_01x04 J1
+U 1 1 63755CAE
+P 4150 3600
+F 0 "J1" H 4068 3175 50  0000 C CNN
+F 1 "Conn_01x04" H 4068 3266 50  0000 C CNN
+F 2 "" H 4150 3600 50  0001 C CNN
+F 3 "~" H 4150 3600 50  0001 C CNN
+	1    4150 3600
+	-1   0    0    1   
+$EndComp
+$Comp
+L Diode:1N4148 D1
+U 1 1 63756994
+P 4650 3600
+F 0 "D1" H 4650 3700 50  0000 C CNN
+F 1 "1N4148" H 4650 3800 50  0000 C CNN
+F 2 "Diode_THT:D_DO-35_SOD27_P7.62mm_Horizontal" H 4650 3425 50  0001 C CNN
+F 3 "https://assets.nexperia.com/documents/data-sheet/1N4148_1N4448.pdf" H 4650 3600 50  0001 C CNN
+	1    4650 3600
+	-1   0    0    1   
+$EndComp
+Text GLabel 5100 4050 0    50   Input ~ 0
+GND
+$Comp
+L MCU_Module:WeMos_D1_mini U1
+U 1 1 63759BCF
+P 6600 3300
+F 0 "U1" H 6600 2319 50  0000 C CNN
+F 1 "WeMos_D1_mini" H 6600 2410 50  0000 C CNN
+F 2 "Module:WEMOS_D1_mini_light" H 6600 2150 50  0001 C CNN
+F 3 "https://wiki.wemos.cc/products:d1:d1_mini#documentation" H 4750 2150 50  0001 C CNN
+	1    6600 3300
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	5550 4050 5100 4050
+Wire Wire Line
+	4500 3600 4450 3600
+Wire Wire Line
+	4450 3600 4450 3500
+Connection ~ 4450 3600
+Wire Wire Line
+	4450 3600 4350 3600
+Text GLabel 4450 3850 3    50   Input ~ 0
+GND
+Wire Wire Line
+	4450 3850 4450 3700
+Wire Wire Line
+	4450 3700 4350 3700
+Text Notes 4050 3400 2    50   ~ 0
++5V
+Text Notes 4050 3500 2    50   ~ 0
++20V
+Text Notes 4050 3600 2    50   ~ 0
+DATA
+Text Notes 4050 3700 2    50   ~ 0
+GND
+$Comp
+L Logic_LevelTranslator:SN74LVC2T45DCUR U2
+U 1 1 637D2A85
+P 5550 3550
+F 0 "U2" H 5550 2961 50  0000 C CNN
+F 1 "SN74LVC2T45DCUR" H 5550 2870 50  0000 C CNN
+F 2 "Package_SO:VSSOP-8_2.4x2.1mm_P0.5mm" H 5600 3000 50  0001 C CNN
+F 3 "http://www.ti.com/lit/ds/symlink/sn74lvc2t45.pdf" H 4650 3000 50  0001 C CNN
+	1    5550 3550
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5150 3500 5150 3450
+Wire Wire Line
+	4450 3500 5150 3500
+Wire Wire Line
+	5150 3600 5150 3650
+Wire Wire Line
+	4800 3600 5150 3600
+Wire Wire Line
+	5950 3450 6100 3450
+Wire Wire Line
+	6100 3450 6100 3500
+Wire Wire Line
+	6100 3500 6200 3500
+Wire Wire Line
+	5950 3650 6100 3650
+Wire Wire Line
+	6100 3650 6100 3600
+Wire Wire Line
+	6100 3600 6200 3600
+$Comp
+L power:+3.3V #PWR04
+U 1 1 637DD91F
+P 6500 4200
+F 0 "#PWR04" H 6500 4050 50  0001 C CNN
+F 1 "+3.3V" H 6515 4373 50  0000 C CNN
+F 2 "" H 6500 4200 50  0001 C CNN
+F 3 "" H 6500 4200 50  0001 C CNN
+	1    6500 4200
+	-1   0    0    1   
+$EndComp
+$Comp
+L power:+3.3V #PWR03
+U 1 1 637DE29D
+P 5650 2900
+F 0 "#PWR03" H 5650 2750 50  0001 C CNN
+F 1 "+3.3V" H 5665 3073 50  0000 C CNN
+F 2 "" H 5650 2900 50  0001 C CNN
+F 3 "" H 5650 2900 50  0001 C CNN
+	1    5650 2900
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5650 3050 5650 2900
+$Comp
+L power:+5V #PWR05
+U 1 1 637DEF15
+P 6700 4350
+F 0 "#PWR05" H 6700 4200 50  0001 C CNN
+F 1 "+5V" H 6715 4523 50  0000 C CNN
+F 2 "" H 6700 4350 50  0001 C CNN
+F 3 "" H 6700 4350 50  0001 C CNN
+	1    6700 4350
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	6500 4100 6500 4200
+Wire Wire Line
+	6700 4350 6700 4100
+$Comp
+L power:+5V #PWR02
+U 1 1 637E0DEC
+P 5450 2700
+F 0 "#PWR02" H 5450 2550 50  0001 C CNN
+F 1 "+5V" H 5465 2873 50  0000 C CNN
+F 2 "" H 5450 2700 50  0001 C CNN
+F 3 "" H 5450 2700 50  0001 C CNN
+	1    5450 2700
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5450 3050 5450 2700
+$Comp
+L power:+5V #PWR01
+U 1 1 637E1D07
+P 4500 3400
+F 0 "#PWR01" H 4500 3250 50  0001 C CNN
+F 1 "+5V" V 4515 3528 50  0000 L CNN
+F 2 "" H 4500 3400 50  0001 C CNN
+F 3 "" H 4500 3400 50  0001 C CNN
+	1    4500 3400
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	4350 3400 4500 3400
+$EndSCHEMATC
