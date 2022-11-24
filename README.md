@@ -6,6 +6,8 @@ Custom component for EspHome to control your extraflame oven.
 
 I will describe here only the software part. The wiring with the board can be done in different ways. Some are described [here](https://k3a.me/ir-controller-for-pellet-stove-with-micronova-controller-stufe-e-pellet-aria-ir-telecomando/)
 
+Another way is documented [here](./docs/connection.md)
+
 ## 1. Installation
 
 Please add the following snippet into your configuration file.
@@ -113,7 +115,7 @@ To use the "dumping" as flexable as possible, dumping is an action. More informa
 Here is what every options means:
 
 | Name             |      Type      | Default      | Description                                                                                                               |
-|------------------|:--------------:| ------------ |---------------------------------------------------------------------------------------------------------------------------|
+| ---------------- | :------------: | ------------ | ------------------------------------------------------------------------------------------------------------------------- |
 | `memory`         |    `string`    | **Required** | `RAM` or `EEPROM`                                                                                                         |
 | `start`          | `(hex) number` | **Required** | From which address the values are dumped. Values must be between 0x0 - 0xFF (255)                                         |
 | `end`            | `(hex) number` | **Required** | Until which address the values are dumped. Values must be between 0x0 - 0xFF (255)                                        |
