@@ -1,3 +1,5 @@
+# Please use the [micronova component](https://www.esphome.io/components/micronova/) directly built into EspHome instead
+
 # EspHome-Extraflame
 
 Custom component for EspHome to control your extraflame oven.
