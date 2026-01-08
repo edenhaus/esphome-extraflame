@@ -18,7 +18,7 @@ ExtraflameSensor = extraflame_ns.class_(
 )
 
 CONFIG_SCHEMA = EXTRAFLAME_COMPONENT_SCHEMA.extend(
-    sensor.SENSOR_SCHEMA.extend(
+    sensor._SENSOR_SCHEMA.extend(
         {
             cv.GenerateID(): cv.declare_id(ExtraflameSensor),
         }
